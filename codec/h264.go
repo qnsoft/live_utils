@@ -164,7 +164,7 @@ func (p *AVCDecoderConfigurationRecord) Unmarshal(b []byte) (n int, err error) {
 			err = ErrDecconfInvalid
 			return
 		}
-		spslen := int(utils.BigEndian.Uint16(b[n:]))
+		spslen := int(live_utils.BigEndian.Uint16(b[n:]))
 		n += 2
 
 		if len(b) < n+spslen {
