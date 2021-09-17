@@ -1,4 +1,4 @@
-package utils
+package live_utils
 
 //
 // 注意:RTMP模式下都是大端模式

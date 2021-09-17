@@ -1,4 +1,4 @@
-package utils
+package live_utils
 
 import (
 	"github.com/funny/slab"
