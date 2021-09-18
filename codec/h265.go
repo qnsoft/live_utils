@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/q191201771/naza/pkg/nazabits"
-	utils "github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils"
 )
 
 const (
@@ -132,10 +132,10 @@ func ParseVpsSpsPpsFromSeqHeaderWithoutMalloc(payload []byte) (vps, sps, pps []b
 	if payload[index] != byte(NAL_UNIT_VPS)&0x3f {
 		return nil, nil, nil, ErrHevc
 	}
-	if numNalus := int(utils.BigEndian.Uint16(payload[index+1:])); numNalus != 1 {
+	if numNalus := int(live_utils.BigEndian.Uint16(payload[index+1:])); numNalus != 1 {
 		return nil, nil, nil, ErrHevc
 	}
-	vpsLen := int(utils.BigEndian.Uint16(payload[index+3:]))
+	vpsLen := int(live_utils.BigEndian.Uint16(payload[index+3:]))
 
 	if len(payload) < 33+vpsLen {
 		return nil, nil, nil, ErrHevc
@@ -150,10 +150,10 @@ func ParseVpsSpsPpsFromSeqHeaderWithoutMalloc(payload []byte) (vps, sps, pps []b
 	if payload[index] != byte(NAL_UNIT_SPS)&0x3f {
 		return nil, nil, nil, ErrHevc
 	}
-	if numNalus := int(utils.BigEndian.Uint16(payload[index+1:])); numNalus != 1 {
+	if numNalus := int(live_utils.BigEndian.Uint16(payload[index+1:])); numNalus != 1 {
 		return nil, nil, nil, ErrHevc
 	}
-	spsLen := int(utils.BigEndian.Uint16(payload[index+3:]))
+	spsLen := int(live_utils.BigEndian.Uint16(payload[index+3:]))
 	if len(payload) < 38+vpsLen+spsLen {
 		return nil, nil, nil, ErrHevc
 	}
@@ -166,10 +166,10 @@ func ParseVpsSpsPpsFromSeqHeaderWithoutMalloc(payload []byte) (vps, sps, pps []b
 	if payload[index] != byte(NAL_UNIT_PPS)&0x3f {
 		return nil, nil, nil, ErrHevc
 	}
-	if numNalus := int(utils.BigEndian.Uint16(payload[index+1:])); numNalus != 1 {
+	if numNalus := int(live_utils.BigEndian.Uint16(payload[index+1:])); numNalus != 1 {
 		return nil, nil, nil, ErrHevc
 	}
-	ppsLen := int(utils.BigEndian.Uint16(payload[index+3:]))
+	ppsLen := int(live_utils.BigEndian.Uint16(payload[index+3:]))
 	if len(payload) < 43+vpsLen+spsLen+ppsLen {
 		return nil, nil, nil, ErrHevc
 	}
@@ -206,10 +206,10 @@ func BuildH265SeqHeaderFromVpsSpsPps(vps, sps, pps []byte) ([]byte, error) {
 	// unsigned int(5) general_profile_idc;
 	sh[6] = ctx.generalProfileSpace<<6 | ctx.generalTierFlag<<5 | ctx.generalProfileIdc
 	// unsigned int(32) general_profile_compatibility_flags
-	utils.BigEndian.PutUint32(sh[7:], ctx.generalProfileCompatibilityFlags)
+	live_utils.BigEndian.PutUint32(sh[7:], ctx.generalProfileCompatibilityFlags)
 	// unsigned int(48) general_constraint_indicator_flags
-	utils.BigEndian.PutUint32(sh[11:], uint32(ctx.generalConstraintIndicatorFlags>>16))
-	utils.BigEndian.PutUint16(sh[15:], uint16(ctx.generalConstraintIndicatorFlags))
+	live_utils.BigEndian.PutUint32(sh[11:], uint32(ctx.generalConstraintIndicatorFlags>>16))
+	live_utils.BigEndian.PutUint16(sh[15:], uint16(ctx.generalConstraintIndicatorFlags))
 	// unsigned int(8) general_level_idc;
 	sh[17] = ctx.generalLevelIdc
 
@@ -218,7 +218,7 @@ func BuildH265SeqHeaderFromVpsSpsPps(vps, sps, pps []byte) ([]byte, error) {
 	// bit(6) reserved = ‘111111’b;
 	// unsigned int(2) parallelismType;
 	// TODO chef: 这两个字段没有解析
-	utils.BigEndian.PutUint16(sh[18:], 0xf000)
+	live_utils.BigEndian.PutUint16(sh[18:], 0xf000)
 	sh[20] = 0xfc
 
 	// bit(6) reserved = ‘111111’b;
@@ -234,7 +234,7 @@ func BuildH265SeqHeaderFromVpsSpsPps(vps, sps, pps []byte) ([]byte, error) {
 	sh[23] = ctx.bitDepthChromaMinus8 | 0xf8
 
 	// bit(16) avgFrameRate;
-	utils.BigEndian.PutUint16(sh[24:], 0)
+	live_utils.BigEndian.PutUint16(sh[24:], 0)
 
 	// bit(2) constantFrameRate;
 	// bit(3) numTemporalLayers;
@@ -247,19 +247,19 @@ func BuildH265SeqHeaderFromVpsSpsPps(vps, sps, pps []byte) ([]byte, error) {
 	i := 28
 	sh[i] = byte(NAL_UNIT_VPS)
 	// num of vps
-	utils.BigEndian.PutUint16(sh[i+1:], 1)
+	live_utils.BigEndian.PutUint16(sh[i+1:], 1)
 	// length
-	utils.BigEndian.PutUint16(sh[i+3:], uint16(len(vps)))
+	live_utils.BigEndian.PutUint16(sh[i+3:], uint16(len(vps)))
 	copy(sh[i+5:], vps)
 	i = i + 5 + len(vps)
 	sh[i] = byte(NAL_UNIT_SPS)
-	utils.BigEndian.PutUint16(sh[i+1:], 1)
-	utils.BigEndian.PutUint16(sh[i+3:], uint16(len(sps)))
+	live_utils.BigEndian.PutUint16(sh[i+1:], 1)
+	live_utils.BigEndian.PutUint16(sh[i+3:], uint16(len(sps)))
 	copy(sh[i+5:], sps)
 	i = i + 5 + len(sps)
 	sh[i] = byte(NAL_UNIT_PPS)
-	utils.BigEndian.PutUint16(sh[i+1:], 1)
-	utils.BigEndian.PutUint16(sh[i+3:], uint16(len(pps)))
+	live_utils.BigEndian.PutUint16(sh[i+1:], 1)
+	live_utils.BigEndian.PutUint16(sh[i+3:], uint16(len(pps)))
 	copy(sh[i+5:], pps)
 
 	return sh, nil

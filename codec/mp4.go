@@ -1,7 +1,7 @@
 package codec
 
 import (
-	utils "github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils"
 )
 
 type MP4 interface {
@@ -82,7 +82,7 @@ type FileTypeBox struct {
 
 func NewFileTypeBox() (box *FileTypeBox) {
 	box = new(FileTypeBox)
-	box.MP4BoxHeader.BoxType, _ = utils.ByteToUint32([]byte("ftyp"), true)
+	box.MP4BoxHeader.BoxType, _ = live_utils.ByteToUint32([]byte("ftyp"), true)
 
 	return
 }
@@ -124,7 +124,7 @@ type MovieBox struct {
 
 func NewMovieBox() (box *MovieBox) {
 	box = new(MovieBox)
-	box.MP4BoxHeader.BoxType, _ = utils.ByteToUint32([]byte("moov"), true)
+	box.MP4BoxHeader.BoxType, _ = live_utils.ByteToUint32([]byte("moov"), true)
 
 	return
 }

@@ -3,7 +3,7 @@ package codec
 import (
 	"io"
 
-	utils "github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils"
 )
 
 const (
@@ -76,14 +76,14 @@ var (
 var FLVHeader = []byte{0x46, 0x4c, 0x56, 0x01, 0x05, 0, 0, 0, 9, 0, 0, 0, 0}
 
 func WriteFLVTag(w io.Writer, t byte, timestamp uint32, payload []byte) (err error) {
-	head := utils.GetSlice(11)
-	defer utils.RecycleSlice(head)
-	tail := utils.GetSlice(4)
-	defer utils.RecycleSlice(tail)
+	head := live_utils.GetSlice(11)
+	defer live_utils.RecycleSlice(head)
+	tail := live_utils.GetSlice(4)
+	defer live_utils.RecycleSlice(tail)
 	head[0] = t
 	dataSize := uint32(len(payload))
-	utils.BigEndian.PutUint32(tail, dataSize+11)
-	utils.BigEndian.PutUint24(head[1:], dataSize)
+	live_utils.BigEndian.PutUint32(tail, dataSize+11)
+	live_utils.BigEndian.PutUint24(head[1:], dataSize)
 	head[4] = byte(timestamp >> 16)
 	head[5] = byte(timestamp >> 8)
 	head[6] = byte(timestamp)
@@ -101,19 +101,19 @@ func WriteFLVTag(w io.Writer, t byte, timestamp uint32, payload []byte) (err err
 	return
 }
 func ReadFLVTag(r io.Reader) (t byte, timestamp uint32, payload []byte, err error) {
-	head := utils.GetSlice(11)
-	defer utils.RecycleSlice(head)
+	head := live_utils.GetSlice(11)
+	defer live_utils.RecycleSlice(head)
 	if _, err = io.ReadFull(r, head); err != nil {
 		return
 	}
 	t = head[0]
-	dataSize := utils.BigEndian.Uint24(head[1:])
+	dataSize := live_utils.BigEndian.Uint24(head[1:])
 	timestamp = (uint32(head[7]) << 24) | (uint32(head[4]) << 16) | (uint32(head[5]) << 8) | uint32(head[6])
 	payload = make([]byte, int(dataSize))
 	if _, err = io.ReadFull(r, payload); err == nil {
-		t := utils.GetSlice(4)
+		t := live_utils.GetSlice(4)
 		_, err = io.ReadFull(r, t)
-		utils.RecycleSlice(t)
+		live_utils.RecycleSlice(t)
 	}
 	return
 }
