@@ -84,7 +84,7 @@ const (
 )
 
 var AudNalu = []byte{0x00, 0x00, 0x00, 0x01, 0x46, 0x01, 0x10}
-var ErrHevc = errors.New("m7s.hevc: fxxk")
+var ErrHevc = errors.New("live_sdk.hevc: fxxk")
 
 //HVCC
 type HVCDecoderConfigurationRecord struct {
