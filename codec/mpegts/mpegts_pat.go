@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	utils "github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils"
 )
 
 // ios13818-1-CN.pdf 43(57)/166
@@ -115,21 +115,21 @@ func ReadPAT(r io.Reader) (pat MpegTsPAT, err error) {
 		// 获取每一个频道的节目信息,保存起来
 		programs := MpegTsPATProgram{}
 
-		programs.ProgramNumber, err = utils.ReadByteToUint16(lr, true)
+		programs.ProgramNumber, err = live_utils.ReadByteToUint16(lr, true)
 		if err != nil {
 			return
 		}
 
 		// 如果programNumber为0,则是NetworkPID,否则是ProgramMapPID(13)
 		if programs.ProgramNumber == 0 {
-			programs.NetworkPID, err = utils.ReadByteToUint16(lr, true)
+			programs.NetworkPID, err = live_utils.ReadByteToUint16(lr, true)
 			if err != nil {
 				return
 			}
 
 			programs.NetworkPID = programs.NetworkPID & 0x1fff
 		} else {
-			programs.ProgramMapPID, err = utils.ReadByteToUint16(lr, true)
+			programs.ProgramMapPID, err = live_utils.ReadByteToUint16(lr, true)
 			if err != nil {
 				return
 			}
@@ -139,7 +139,7 @@ func ReadPAT(r io.Reader) (pat MpegTsPAT, err error) {
 
 		pat.Program = append(pat.Program, programs)
 	}
-	if cr, ok := r.(*utils.Crc32Reader); ok {
+	if cr, ok := r.(*live_utils.Crc32Reader); ok {
 		err = cr.ReadCrc32UIntAndCheck()
 		if err != nil {
 			return
@@ -154,18 +154,18 @@ func WritePAT(w io.Writer, pat MpegTsPAT) (err error) {
 
 	// 将pat(所有的节目索引信息)写入到缓冲区中
 	for _, pats := range pat.Program {
-		if err = utils.WriteUint16ToByte(bw, pats.ProgramNumber, true); err != nil {
+		if err = live_utils.WriteUint16ToByte(bw, pats.ProgramNumber, true); err != nil {
 			return
 		}
 
 		if pats.ProgramNumber == 0 {
-			if err = utils.WriteUint16ToByte(bw, pats.NetworkPID&0x1fff|7<<13, true); err != nil {
+			if err = live_utils.WriteUint16ToByte(bw, pats.NetworkPID&0x1fff|7<<13, true); err != nil {
 				return
 			}
 		} else {
 			// | 0001 1111 | 1111 1111 |
 			// 7 << 13 -> 1110 0000 0000 0000
-			if err = utils.WriteUint16ToByte(bw, pats.ProgramMapPID&0x1fff|7<<13, true); err != nil {
+			if err = live_utils.WriteUint16ToByte(bw, pats.ProgramMapPID&0x1fff|7<<13, true); err != nil {
 				return
 			}
 		}
@@ -200,7 +200,7 @@ func WritePATPacket(w io.Writer, tsHeader []byte, pat MpegTsPAT) (err error) {
 	}
 
 	// TODO:如果Pat.Program里面包含的信息很大,大于188?
-	stuffingBytes := utils.GetFillBytes(0xff, TS_PACKET_SIZE-4-bw.Len())
+	stuffingBytes := live_utils.GetFillBytes(0xff, TS_PACKET_SIZE-4-bw.Len())
 
 	// PATPacket = TsHeader + PAT + Stuffing Bytes
 	var PATPacket []byte

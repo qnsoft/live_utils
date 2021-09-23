@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	utils "github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils"
 )
 
 //
@@ -37,11 +37,11 @@ type MpegTsPSI struct {
 // 只要是PSI就一定会有pointer_field
 func ReadPSI(r io.Reader, pt uint32) (lr *io.LimitedReader, psi MpegTsPSI, err error) {
 	// pointer field(8)
-	cr, ok := r.(*utils.Crc32Reader)
+	cr, ok := r.(*live_utils.Crc32Reader)
 	if ok {
 		r = cr.R
 	}
-	pointer_field, err := utils.ReadByteToUint8(r)
+	pointer_field, err := live_utils.ReadByteToUint8(r)
 	if err != nil {
 		return
 	}
@@ -60,14 +60,14 @@ func ReadPSI(r io.Reader, pt uint32) (lr *io.LimitedReader, psi MpegTsPSI, err e
 	}
 
 	// table id(8)
-	tableId, err := utils.ReadByteToUint8(r)
+	tableId, err := live_utils.ReadByteToUint8(r)
 	if err != nil {
 		return
 	}
 
 	// sectionSyntaxIndicator(1) + zero(1)  + reserved1(2) + sectionLength(12)
 	// sectionLength 前两个字节固定为00
-	sectionSyntaxIndicatorAndSectionLength, err := utils.ReadByteToUint16(r, true)
+	sectionSyntaxIndicatorAndSectionLength, err := live_utils.ReadByteToUint16(r, true)
 	if err != nil {
 		return
 	}
@@ -77,25 +77,25 @@ func ReadPSI(r io.Reader, pt uint32) (lr *io.LimitedReader, psi MpegTsPSI, err e
 	lr = &io.LimitedReader{R: r, N: int64(sectionSyntaxIndicatorAndSectionLength & 0x3FF)}
 
 	// PAT TransportStreamID(16) or PMT ProgramNumber(16)
-	transportStreamIdOrProgramNumber, err := utils.ReadByteToUint16(lr, true)
+	transportStreamIdOrProgramNumber, err := live_utils.ReadByteToUint16(lr, true)
 	if err != nil {
 		return
 	}
 
 	// reserved2(2) + versionNumber(5) + currentNextIndicator(1)
-	versionNumberAndCurrentNextIndicator, err := utils.ReadByteToUint8(lr)
+	versionNumberAndCurrentNextIndicator, err := live_utils.ReadByteToUint8(lr)
 	if err != nil {
 		return
 	}
 
 	// sectionNumber(8)
-	sectionNumber, err := utils.ReadByteToUint8(lr)
+	sectionNumber, err := live_utils.ReadByteToUint8(lr)
 	if err != nil {
 		return
 	}
 
 	// lastSectionNumber(8)
-	lastSectionNumber, err := utils.ReadByteToUint8(lr)
+	lastSectionNumber, err := live_utils.ReadByteToUint8(lr)
 	if err != nil {
 		return
 	}
@@ -177,43 +177,43 @@ func WritePSI(w io.Writer, pt uint32, psi MpegTsPSI, data []byte) (err error) {
 	}
 
 	// pointer field(8)
-	if err = utils.WriteUint8ToByte(w, 0); err != nil {
+	if err = live_utils.WriteUint8ToByte(w, 0); err != nil {
 		return
 	}
 
-	cw := &utils.Crc32Writer{W: w, Crc32: 0xffffffff}
+	cw := &live_utils.Crc32Writer{W: w, Crc32: 0xffffffff}
 
 	// table id(8)
-	if err = utils.WriteUint8ToByte(cw, tableId); err != nil {
+	if err = live_utils.WriteUint8ToByte(cw, tableId); err != nil {
 		return
 	}
 
 	// sectionSyntaxIndicator(1) + zero(1)  + reserved1(2) + sectionLength(12)
 	// sectionLength 前两个字节固定为00
 	// 1 0 11 sectionLength
-	if err = utils.WriteUint16ToByte(cw, sectionSyntaxIndicatorAndSectionLength, true); err != nil {
+	if err = live_utils.WriteUint16ToByte(cw, sectionSyntaxIndicatorAndSectionLength, true); err != nil {
 		return
 	}
 
 	// PAT TransportStreamID(16) or PMT ProgramNumber(16)
-	if err = utils.WriteUint16ToByte(cw, transportStreamIdOrProgramNumber, true); err != nil {
+	if err = live_utils.WriteUint16ToByte(cw, transportStreamIdOrProgramNumber, true); err != nil {
 		return
 	}
 
 	// reserved2(2) + versionNumber(5) + currentNextIndicator(1)
 	// 0x3 << 6 -> 1100 0000
 	// 0x3 << 6  | 1 -> 1100 0001
-	if err = utils.WriteUint8ToByte(cw, versionNumberAndCurrentNextIndicator); err != nil {
+	if err = live_utils.WriteUint8ToByte(cw, versionNumberAndCurrentNextIndicator); err != nil {
 		return
 	}
 
 	// sectionNumber(8)
-	if err = utils.WriteUint8ToByte(cw, sectionNumber); err != nil {
+	if err = live_utils.WriteUint8ToByte(cw, sectionNumber); err != nil {
 		return
 	}
 
 	// lastSectionNumber(8)
-	if err = utils.WriteUint8ToByte(cw, lastSectionNumber); err != nil {
+	if err = live_utils.WriteUint8ToByte(cw, lastSectionNumber); err != nil {
 		return
 	}
 
@@ -223,8 +223,8 @@ func WritePSI(w io.Writer, pt uint32, psi MpegTsPSI, data []byte) (err error) {
 	}
 
 	// crc32
-	crc32 := utils.BigLittleSwap(uint(cw.Crc32))
-	if err = utils.WriteUint32ToByte(cw, uint32(crc32), true); err != nil {
+	crc32 := live_utils.BigLittleSwap(uint(cw.Crc32))
+	if err = live_utils.WriteUint32ToByte(cw, uint32(crc32), true); err != nil {
 		return
 	}
 

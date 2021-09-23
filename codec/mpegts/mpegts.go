@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	utils "github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils"
 	//"sync"
 )
 
@@ -201,7 +201,7 @@ func ReadTsHeader(r io.Reader) (header MpegTsHeader, err error) {
 	var h uint32
 
 	// MPEGTS Header 4个字节
-	h, err = utils.ReadByteToUint32(r, true)
+	h, err = live_utils.ReadByteToUint32(r, true)
 	if err != nil {
 		return
 	}
@@ -254,7 +254,7 @@ func ReadTsHeader(r io.Reader) (header MpegTsHeader, err error) {
 	// 填充通过规定自适应字段长度比自适应字段中数据元的长度总和还要长来实现,以致于自适应字段在完全容纳有效的PES 包数据后,有效载荷字节仍有剩余.自适应字段中额外空间采用填充字节填满.
 	if header.AdaptionFieldControl >= 2 {
 		// adaptationFieldLength
-		header.AdaptationFieldLength, err = utils.ReadByteToUint8(r)
+		header.AdaptationFieldLength, err = live_utils.ReadByteToUint8(r)
 		if err != nil {
 			return
 		}
@@ -271,7 +271,7 @@ func ReadTsHeader(r io.Reader) (header MpegTsHeader, err error) {
 			// trasportPrivateDataFlag
 			// adaptationFieldExtensionFlag
 			var flags uint8
-			flags, err = utils.ReadByteToUint8(lr)
+			flags, err = live_utils.ReadByteToUint8(lr)
 			if err != nil {
 				return
 			}
@@ -297,7 +297,7 @@ func ReadTsHeader(r io.Reader) (header MpegTsHeader, err error) {
 			// 0->指示自适应字段不包含任何 PCR 字段
 			if header.PCRFlag != 0 {
 				var pcr uint64
-				pcr, err = utils.ReadByteToUint48(lr, true)
+				pcr, err = live_utils.ReadByteToUint48(lr, true)
 				if err != nil {
 					return
 				}
@@ -311,7 +311,7 @@ func ReadTsHeader(r io.Reader) (header MpegTsHeader, err error) {
 			// OPCRFlag
 			if header.OPCRFlag != 0 {
 				var opcr uint64
-				opcr, err = utils.ReadByteToUint48(lr, true)
+				opcr, err = live_utils.ReadByteToUint48(lr, true)
 				if err != nil {
 					return
 				}
@@ -326,7 +326,7 @@ func ReadTsHeader(r io.Reader) (header MpegTsHeader, err error) {
 			// 1->指示 splice_countdown 字段必须在相关自适应字段中存在,指定拼接点的出现.
 			// 0->指示自适应字段中 splice_countdown 字段不存在
 			if header.SplicingPointFlag != 0 {
-				header.SpliceCountdown, err = utils.ReadByteToUint8(lr)
+				header.SpliceCountdown, err = live_utils.ReadByteToUint8(lr)
 				if err != nil {
 					return
 				}
@@ -336,7 +336,7 @@ func ReadTsHeader(r io.Reader) (header MpegTsHeader, err error) {
 			// 1->指示自适应字段包含一个或多个 private_data 字节.
 			// 0->指示自适应字段不包含任何 private_data 字节
 			if header.TrasportPrivateDataFlag != 0 {
-				header.TransportPrivateDataLength, err = utils.ReadByteToUint8(lr)
+				header.TransportPrivateDataLength, err = live_utils.ReadByteToUint8(lr)
 				if err != nil {
 					return
 				}
@@ -375,7 +375,7 @@ func WriteTsHeader(w io.Writer, header MpegTsHeader) (written int, err error) {
 	}
 
 	h := uint32(header.SyncByte)<<24 + uint32(header.TransportErrorIndicator)<<23 + uint32(header.PayloadUnitStartIndicator)<<22 + uint32(header.TransportPriority)<<21 + uint32(header.Pid)<<8 + uint32(header.TransportScramblingControl)<<6 + uint32(header.AdaptionFieldControl)<<4 + uint32(header.ContinuityCounter)
-	if err = utils.WriteUint32ToByte(w, h, true); err != nil {
+	if err = live_utils.WriteUint32ToByte(w, h, true); err != nil {
 		return
 	}
 
@@ -383,7 +383,7 @@ func WriteTsHeader(w io.Writer, header MpegTsHeader) (written int, err error) {
 
 	if header.AdaptionFieldControl >= 2 {
 		// adaptationFieldLength(8)
-		if err = utils.WriteUint8ToByte(w, header.AdaptationFieldLength); err != nil {
+		if err = live_utils.WriteUint8ToByte(w, header.AdaptationFieldLength); err != nil {
 			return
 		}
 
@@ -400,7 +400,7 @@ func WriteTsHeader(w io.Writer, header MpegTsHeader) (written int, err error) {
 			// trasportPrivateDataFlag(1)
 			// adaptationFieldExtensionFlag(1)
 			threeIndicatorFiveFlags := uint8(header.DiscontinuityIndicator<<7) + uint8(header.RandomAccessIndicator<<6) + uint8(header.ElementaryStreamPriorityIndicator<<5) + uint8(header.PCRFlag<<4) + uint8(header.OPCRFlag<<3) + uint8(header.SplicingPointFlag<<2) + uint8(header.TrasportPrivateDataFlag<<1) + uint8(header.AdaptationFieldExtensionFlag)
-			if err = utils.WriteUint8ToByte(w, threeIndicatorFiveFlags); err != nil {
+			if err = live_utils.WriteUint8ToByte(w, threeIndicatorFiveFlags); err != nil {
 				return
 			}
 
@@ -409,7 +409,7 @@ func WriteTsHeader(w io.Writer, header MpegTsHeader) (written int, err error) {
 			// PCR(i) = PCR_base(i)*300 + PCR_ext(i)
 			if header.PCRFlag != 0 {
 				pcr := header.ProgramClockReferenceBase<<15 | 0x3f<<9 | uint64(header.ProgramClockReferenceExtension)
-				if err = utils.WriteUint48ToByte(w, pcr, true); err != nil {
+				if err = live_utils.WriteUint48ToByte(w, pcr, true); err != nil {
 					return
 				}
 
@@ -419,7 +419,7 @@ func WriteTsHeader(w io.Writer, header MpegTsHeader) (written int, err error) {
 			// OPCRFlag
 			if header.OPCRFlag != 0 {
 				opcr := header.OriginalProgramClockReferenceBase<<15 | 0x3f<<9 | uint64(header.OriginalProgramClockReferenceExtension)
-				if err = utils.WriteUint48ToByte(w, opcr, true); err != nil {
+				if err = live_utils.WriteUint48ToByte(w, opcr, true); err != nil {
 					return
 				}
 
@@ -489,7 +489,7 @@ func (s *MpegTsStream) readPAT(packet *MpegTsPacket, pr io.Reader) (err error) {
 	// 首先找到PID==0x00的TS包(PAT)
 	if PID_PAT == packet.Header.Pid {
 		if len(packet.Payload) == 188 {
-			pr = &utils.Crc32Reader{R: pr, Crc32: 0xffffffff}
+			pr = &live_utils.Crc32Reader{R: pr, Crc32: 0xffffffff}
 		}
 		// Header + PSI + Paylod
 		pat, err := ReadPAT(pr)
@@ -507,7 +507,7 @@ func (s *MpegTsStream) readPMT(packet *MpegTsPacket, pr io.Reader) (err error) {
 	for _, v := range s.pat.Program {
 		if v.ProgramMapPID == packet.Header.Pid {
 			if len(packet.Payload) == 188 {
-				pr = &utils.Crc32Reader{R: pr, Crc32: 0xffffffff}
+				pr = &live_utils.Crc32Reader{R: pr, Crc32: 0xffffffff}
 			}
 			// Header + PSI + Paylod
 			pmt, err := ReadPMT(pr)

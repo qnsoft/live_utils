@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	utils "github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils"
 	"github.com/qnsoft/live_utils/codec"
 )
 
@@ -113,7 +113,7 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 	var length uint
 
 	// packetStartCodePrefix(24) (0x000001)
-	header.PacketStartCodePrefix, err = utils.ReadByteToUint24(r, true)
+	header.PacketStartCodePrefix, err = live_utils.ReadByteToUint24(r, true)
 	if err != nil {
 		return
 	}
@@ -124,13 +124,13 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 	}
 
 	// streamID(8)
-	header.StreamID, err = utils.ReadByteToUint8(r)
+	header.StreamID, err = live_utils.ReadByteToUint8(r)
 	if err != nil {
 		return
 	}
 
 	// pes_PacketLength(16)
-	header.PesPacketLength, err = utils.ReadByteToUint16(r, true)
+	header.PesPacketLength, err = live_utils.ReadByteToUint16(r, true)
 	if err != nil {
 		return
 	}
@@ -155,7 +155,7 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 	// dataAlignmentIndicator(1)
 	// copyright(1)
 	// originalOrCopy(1)
-	flags, err = utils.ReadByteToUint8(lrHeader)
+	flags, err = live_utils.ReadByteToUint8(lrHeader)
 	if err != nil {
 		return
 	}
@@ -174,7 +174,7 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 	// additionalCopyInfoFlag(1)
 	// pes_CRCFlag(1)
 	// pes_ExtensionFlag(1)
-	flags, err = utils.ReadByteToUint8(lrHeader)
+	flags, err = live_utils.ReadByteToUint8(lrHeader)
 	if err != nil {
 		return
 	}
@@ -188,7 +188,7 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 	header.PesExtensionFlag = flags & 0x01
 
 	// pes_HeaderDataLength(8)
-	header.PesHeaderDataLength, err = utils.ReadByteToUint8(lrHeader)
+	header.PesHeaderDataLength, err = live_utils.ReadByteToUint8(lrHeader)
 	if err != nil {
 		return
 	}
@@ -205,30 +205,30 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 	// PTS(33)
 	if flags&0x80 != 0 {
 		var pts uint64
-		pts, err = utils.ReadByteToUint40(lrHeader, true)
+		pts, err = live_utils.ReadByteToUint40(lrHeader, true)
 		if err != nil {
 			return
 		}
 
-		header.Pts = utils.GetPtsDts(pts)
+		header.Pts = live_utils.GetPtsDts(pts)
 	}
 
 	// DTS(33)
 	if flags&0x80 != 0 && flags&0x40 != 0 {
 		var dts uint64
-		dts, err = utils.ReadByteToUint40(lrHeader, true)
+		dts, err = live_utils.ReadByteToUint40(lrHeader, true)
 		if err != nil {
 			return
 		}
 
-		header.Dts = utils.GetPtsDts(dts)
+		header.Dts = live_utils.GetPtsDts(dts)
 	}
 
 	// reserved(2) + escr_Base1(3) + marker_bit(1) +
 	// escr_Base2(15) + marker_bit(1) + escr_Base23(15) +
 	// marker_bit(1) + escr_Extension(9) + marker_bit(1)
 	if header.EscrFlag != 0 {
-		_, err = utils.ReadByteToUint48(lrHeader, true)
+		_, err = live_utils.ReadByteToUint48(lrHeader, true)
 		if err != nil {
 			return
 		}
@@ -239,7 +239,7 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 
 	// es_Rate(22)
 	if header.EsRateFlag != 0 {
-		header.EsRate, err = utils.ReadByteToUint24(lrHeader, true)
+		header.EsRate, err = live_utils.ReadByteToUint24(lrHeader, true)
 		if err != nil {
 			return
 		}
@@ -249,7 +249,7 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 	/*
 		// trickModeControl(3) + trickModeValue(5)
 		if s.pes.dsm_TrickModeFlag != 0 {
-			trickMcMv, err := utils.ReadByteToUint8(lrHeader)
+			trickMcMv, err := live_utils.ReadByteToUint8(lrHeader)
 			if err != nil {
 				return err
 			}
@@ -261,7 +261,7 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 
 	// marker_bit(1) + additionalCopyInfo(7)
 	if header.AdditionalCopyInfoFlag != 0 {
-		header.AdditionalCopyInfo, err = utils.ReadByteToUint8(lrHeader)
+		header.AdditionalCopyInfo, err = live_utils.ReadByteToUint8(lrHeader)
 		if err != nil {
 			return
 		}
@@ -271,7 +271,7 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 
 	// previous_PES_Packet_CRC(16)
 	if header.PesCRCFlag != 0 {
-		header.PreviousPESPacketCRC, err = utils.ReadByteToUint16(lrHeader, true)
+		header.PreviousPESPacketCRC, err = live_utils.ReadByteToUint16(lrHeader, true)
 		if err != nil {
 			return
 		}
@@ -281,7 +281,7 @@ func ReadPESHeader(r io.Reader) (header MpegTsPESHeader, err error) {
 	// p_STD_BufferFlag(1) + reserved(3) + pes_ExtensionFlag2(1)
 	if header.PesExtensionFlag != 0 {
 		var flags uint8
-		flags, err = utils.ReadByteToUint8(lrHeader)
+		flags, err = live_utils.ReadByteToUint8(lrHeader)
 		if err != nil {
 			return
 		}
@@ -356,14 +356,14 @@ func WritePESHeader(w io.Writer, header MpegTsPESHeader) (written int, err error
 	}
 
 	// packetStartCodePrefix(24) (0x000001)
-	if err = utils.WriteUint24ToByte(w, header.PacketStartCodePrefix, true); err != nil {
+	if err = live_utils.WriteUint24ToByte(w, header.PacketStartCodePrefix, true); err != nil {
 		return
 	}
 
 	written += 3
 
 	// streamID(8)
-	if err = utils.WriteUint8ToByte(w, header.StreamID); err != nil {
+	if err = live_utils.WriteUint8ToByte(w, header.StreamID); err != nil {
 		return
 	}
 
@@ -372,7 +372,7 @@ func WritePESHeader(w io.Writer, header MpegTsPESHeader) (written int, err error
 	// pes_PacketLength(16)
 	// PES包长度可能为0,这个时候,需要自己去算
 	// 0 <= len <= 65535
-	if err = utils.WriteUint16ToByte(w, header.PesPacketLength, true); err != nil {
+	if err = live_utils.WriteUint16ToByte(w, header.PesPacketLength, true); err != nil {
 		return
 	}
 
@@ -394,7 +394,7 @@ func WritePESHeader(w io.Writer, header MpegTsPESHeader) (written int, err error
 	}
 
 	flags := header.ConstTen | header.PesScramblingControl | header.PesPriority | header.DataAlignmentIndicator | header.Copyright | header.OriginalOrCopy
-	if err = utils.WriteUint8ToByte(w, flags); err != nil {
+	if err = live_utils.WriteUint8ToByte(w, flags); err != nil {
 		return
 	}
 
@@ -408,14 +408,14 @@ func WritePESHeader(w io.Writer, header MpegTsPESHeader) (written int, err error
 	// pes_CRCFlag(1)
 	// pes_ExtensionFlag(1)
 	sevenFlags := header.PtsDtsFlags | header.EscrFlag | header.EsRateFlag | header.DsmTrickModeFlag | header.AdditionalCopyInfoFlag | header.PesCRCFlag | header.PesExtensionFlag
-	if err = utils.WriteUint8ToByte(w, sevenFlags); err != nil {
+	if err = live_utils.WriteUint8ToByte(w, sevenFlags); err != nil {
 		return
 	}
 
 	written += 1
 
 	// pes_HeaderDataLength(8)
-	if err = utils.WriteUint8ToByte(w, header.PesHeaderDataLength); err != nil {
+	if err = live_utils.WriteUint8ToByte(w, header.PesHeaderDataLength); err != nil {
 		return
 	}
 
@@ -427,16 +427,16 @@ func WritePESHeader(w io.Writer, header MpegTsPESHeader) (written int, err error
 		if header.PtsDtsFlags&0x80 != 0 && header.PtsDtsFlags&0x40 != 0 {
 			// 11:PTS和DTS
 			// PTS(33) + 4 + 3
-			pts := utils.PutPtsDts(header.Pts) | 3<<36
-			if err = utils.WriteUint40ToByte(w, pts, true); err != nil {
+			pts := live_utils.PutPtsDts(header.Pts) | 3<<36
+			if err = live_utils.WriteUint40ToByte(w, pts, true); err != nil {
 				return
 			}
 
 			written += 5
 
 			// DTS(33) + 4 + 3
-			dts := utils.PutPtsDts(header.Dts) | 1<<36
-			if err = utils.WriteUint40ToByte(w, dts, true); err != nil {
+			dts := live_utils.PutPtsDts(header.Dts) | 1<<36
+			if err = live_utils.WriteUint40ToByte(w, dts, true); err != nil {
 				return
 			}
 
@@ -444,8 +444,8 @@ func WritePESHeader(w io.Writer, header MpegTsPESHeader) (written int, err error
 		} else {
 			// 10:只有PTS
 			// PTS(33) + 4 + 3
-			pts := utils.PutPtsDts(header.Pts) | 2<<36
-			if err = utils.WriteUint40ToByte(w, pts, true); err != nil {
+			pts := live_utils.PutPtsDts(header.Pts) | 2<<36
+			if err = live_utils.WriteUint40ToByte(w, pts, true); err != nil {
 				return
 			}
 
@@ -483,7 +483,7 @@ func IowWritePESPacket(w io.Writer, tsHeader MpegTsHeader, packet MpegTsPESPacke
 		return
 	}
 
-	PESPacket := &utils.IOVec{}
+	PESPacket := &live_utils.IOVec{}
 	PESPacket.Append(bw.Bytes())     // header
 	PESPacket.Append(packet.Payload) // packet
 
@@ -491,7 +491,7 @@ func IowWritePESPacket(w io.Writer, tsHeader MpegTsHeader, packet MpegTsPESPacke
 	// 因为通常在将一帧PES封装成TS包(188字节)的时候,一般情况下一帧PES字节数会大于188,并且分多次封装.
 	// 例如这一帧PES字节数为189,那么在封装第二个TS包的时候就只会封装1字节,会导致多次写操作,降低性能.
 	// 因此将所有的字节数,都写进缓冲中去,然后用系统调用syscall来写入.
-	iow := utils.NewIOVecWriter(w)
+	iow := live_utils.NewIOVecWriter(w)
 
 	var isKeyFrame bool
 	var headerLength int
@@ -546,7 +546,7 @@ func IowWritePESPacket(w io.Writer, tsHeader MpegTsHeader, packet MpegTsPESPacke
 			}
 
 			stuffingLength := int(header.AdaptationFieldLength - 1)
-			if _, err = iow.Write(utils.GetFillBytes(0xff, stuffingLength)); err != nil {
+			if _, err = iow.Write(live_utils.GetFillBytes(0xff, stuffingLength)); err != nil {
 				return
 			}
 
@@ -713,7 +713,7 @@ func PESToTs(frame *MpegtsPESFrame, packet MpegTsPESPacket) (tsPkts []byte, err 
 			}
 
 			if tsStuffingLength > 0 {
-				if _, err = bwTsHeader.Write(utils.GetFillBytes(0xff, int(tsStuffingLength))); err != nil {
+				if _, err = bwTsHeader.Write(live_utils.GetFillBytes(0xff, int(tsStuffingLength))); err != nil {
 					return
 				}
 			}

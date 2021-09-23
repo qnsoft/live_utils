@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	utils "github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils"
 )
 
 // ios13818-1-CN.pdf 46(60)-153(167)/page
@@ -138,7 +138,7 @@ func ReadPMT(r io.Reader) (pmt MpegTsPMT, err error) {
 	pmt = psi.Pmt
 
 	// reserved3(3) + pcrPID(13)
-	pcrPID, err := utils.ReadByteToUint16(lr, true)
+	pcrPID, err := live_utils.ReadByteToUint16(lr, true)
 	if err != nil {
 		return
 	}
@@ -147,7 +147,7 @@ func ReadPMT(r io.Reader) (pmt MpegTsPMT, err error) {
 
 	// reserved4(4) + programInfoLength(12)
 	// programInfoLength(12) == 0x00(固定为0) + programInfoLength(10)
-	programInfoLength, err := utils.ReadByteToUint16(lr, true)
+	programInfoLength, err := live_utils.ReadByteToUint16(lr, true)
 	if err != nil {
 		return
 	}
@@ -168,13 +168,13 @@ func ReadPMT(r io.Reader) (pmt MpegTsPMT, err error) {
 	for lr.N > 0 {
 		var streams MpegTsPmtStream
 		// streamType(8)
-		streams.StreamType, err = utils.ReadByteToUint8(lr)
+		streams.StreamType, err = live_utils.ReadByteToUint8(lr)
 		if err != nil {
 			return
 		}
 
 		// reserved5(3) + elementaryPID(13)
-		streams.ElementaryPID, err = utils.ReadByteToUint16(lr, true)
+		streams.ElementaryPID, err = live_utils.ReadByteToUint16(lr, true)
 		if err != nil {
 			return
 		}
@@ -183,7 +183,7 @@ func ReadPMT(r io.Reader) (pmt MpegTsPMT, err error) {
 
 		// reserved6(4) + esInfoLength(12)
 		// esInfoLength(12) == 0x00(固定为0) + esInfoLength(10)
-		streams.EsInfoLength, err = utils.ReadByteToUint16(lr, true)
+		streams.EsInfoLength, err = live_utils.ReadByteToUint16(lr, true)
 		if err != nil {
 			return
 		}
@@ -202,7 +202,7 @@ func ReadPMT(r io.Reader) (pmt MpegTsPMT, err error) {
 		// 每读取一个流的信息(音频流或者视频流或者其他),都保存起来
 		pmt.Stream = append(pmt.Stream, streams)
 	}
-	if cr, ok := r.(*utils.Crc32Reader); ok {
+	if cr, ok := r.(*live_utils.Crc32Reader); ok {
 		err = cr.ReadCrc32UIntAndCheck()
 		if err != nil {
 			return
@@ -215,13 +215,13 @@ func ReadPMTDescriptor(lr *io.LimitedReader) (Desc []MpegTsDescriptor, err error
 	var desc MpegTsDescriptor
 	for lr.N > 0 {
 		// tag (8)
-		desc.Tag, err = utils.ReadByteToUint8(lr)
+		desc.Tag, err = live_utils.ReadByteToUint8(lr)
 		if err != nil {
 			return
 		}
 
 		// length (8)
-		desc.Length, err = utils.ReadByteToUint8(lr)
+		desc.Length, err = live_utils.ReadByteToUint8(lr)
 		if err != nil {
 			return
 		}
@@ -241,12 +241,12 @@ func ReadPMTDescriptor(lr *io.LimitedReader) (Desc []MpegTsDescriptor, err error
 func WritePMTDescriptor(w io.Writer, descs []MpegTsDescriptor) (err error) {
 	for _, desc := range descs {
 		// tag(8)
-		if err = utils.WriteUint8ToByte(w, desc.Tag); err != nil {
+		if err = live_utils.WriteUint8ToByte(w, desc.Tag); err != nil {
 			return
 		}
 
 		// length (8)
-		if err = utils.WriteUint8ToByte(w, uint8(len(desc.Data))); err != nil {
+		if err = live_utils.WriteUint8ToByte(w, uint8(len(desc.Data))); err != nil {
 			return
 		}
 
@@ -261,7 +261,7 @@ func WritePMTDescriptor(w io.Writer, descs []MpegTsDescriptor) (err error) {
 
 func WritePMTBody(w io.Writer, pmt MpegTsPMT) (err error) {
 	// reserved3(3) + pcrPID(13)
-	if err = utils.WriteUint16ToByte(w, pmt.PcrPID|7<<13, true); err != nil {
+	if err = live_utils.WriteUint16ToByte(w, pmt.PcrPID|7<<13, true); err != nil {
 		return
 	}
 
@@ -275,7 +275,7 @@ func WritePMTBody(w io.Writer, pmt MpegTsPMT) (err error) {
 
 	// reserved4(4) + programInfoLength(12)
 	// programInfoLength(12) == 0x00(固定为0) + programInfoLength(10)
-	if err = utils.WriteUint16ToByte(w, pmt.ProgramInfoLength|0xf000, true); err != nil {
+	if err = live_utils.WriteUint16ToByte(w, pmt.ProgramInfoLength|0xf000, true); err != nil {
 		return
 	}
 
@@ -287,12 +287,12 @@ func WritePMTBody(w io.Writer, pmt MpegTsPMT) (err error) {
 	// 循环读取所有的流的信息(音频或者视频)
 	for _, esinfo := range pmt.Stream {
 		// streamType(8)
-		if err = utils.WriteUint8ToByte(w, esinfo.StreamType); err != nil {
+		if err = live_utils.WriteUint8ToByte(w, esinfo.StreamType); err != nil {
 			return
 		}
 
 		// reserved5(3) + elementaryPID(13)
-		if err = utils.WriteUint16ToByte(w, esinfo.ElementaryPID|7<<13, true); err != nil {
+		if err = live_utils.WriteUint16ToByte(w, esinfo.ElementaryPID|7<<13, true); err != nil {
 			return
 		}
 
@@ -306,7 +306,7 @@ func WritePMTBody(w io.Writer, pmt MpegTsPMT) (err error) {
 
 		// reserved6(4) + esInfoLength(12)
 		// esInfoLength(12) == 0x00(固定为0) + esInfoLength(10)
-		if err = utils.WriteUint16ToByte(w, esinfo.EsInfoLength|0xf000, true); err != nil {
+		if err = live_utils.WriteUint16ToByte(w, esinfo.EsInfoLength|0xf000, true); err != nil {
 			return
 		}
 
@@ -355,7 +355,7 @@ func WritePMTPacket(w io.Writer, tsHeader []byte, pmt MpegTsPMT) (err error) {
 	}
 
 	// TODO:如果Pmt.Stream里面包含的信息很大,大于188?
-	stuffingBytes := utils.GetFillBytes(0xff, TS_PACKET_SIZE-4-bw.Len())
+	stuffingBytes := live_utils.GetFillBytes(0xff, TS_PACKET_SIZE-4-bw.Len())
 
 	var PMTPacket []byte
 	PMTPacket = append(PMTPacket, tsHeader...)
