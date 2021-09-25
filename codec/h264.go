@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/qnsoft/live_utils"
-	"github.com/qnsoft/live_utils.bits/pio"
+	"github.com/qnsoft/live_utils/bits/pio"
 )
 
 // Start Code + NAL Unit -> NALU Header + NALU Body
