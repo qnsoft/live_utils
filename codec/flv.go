@@ -3,7 +3,7 @@ package codec
 import (
 	"io"
 
-	"github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils.
 )
 
 const (

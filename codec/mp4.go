@@ -1,7 +1,7 @@
 package codec
 
 import (
-	"github.com/qnsoft/live_utils"
+	"github.com/qnsoft/live_utils.
 )
 
 type MP4 interface {

@@ -4,6 +4,9 @@
 *.exe~
 *.dll
 *.so
+*.7z
+*.rar
+*.zip
 *.dylib
 *.cmd
 *.bat

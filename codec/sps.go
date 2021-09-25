@@ -5,7 +5,7 @@ import (
 
 	"github.com/cnotch/ipchub/av/codec/hevc"
 
-	"github.com/qnsoft/live_utils/bits"
+	"github.com/qnsoft/live_utils.bits"
 )
 
 type SPSInfo struct {

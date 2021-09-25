@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/q191201771/naza/pkg/nazabits"
 	"github.com/qnsoft/live_utils"
+	"github.com/q191201771/naza/pkg/nazabits"
 )
 
 const (
@@ -84,7 +84,7 @@ const (
 )
 
 var AudNalu = []byte{0x00, 0x00, 0x00, 0x01, 0x46, 0x01, 0x10}
-var ErrHevc = errors.New("live_sdk.hevc: fxxk")
+var ErrHevc = errors.New("m7s.hevc: fxxk")
 
 //HVCC
 type HVCDecoderConfigurationRecord struct {

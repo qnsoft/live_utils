@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-
 	"github.com/qnsoft/live_utils"
 	"github.com/qnsoft/live_utils/codec"
+	"io"
+	"io/ioutil"
 )
 
 // ios13818-1-CN.pdf 45/166

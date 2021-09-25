@@ -3,10 +3,9 @@ package mpegts
 import (
 	"bytes"
 	"errors"
+	"github.com/qnsoft/live_utils"
 	"io"
 	"io/ioutil"
-
-	"github.com/qnsoft/live_utils"
 	//"sync"
 )
 
